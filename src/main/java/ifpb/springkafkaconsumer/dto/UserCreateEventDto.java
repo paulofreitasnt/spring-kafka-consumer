@@ -1,12 +1,11 @@
 package ifpb.springkafkaconsumer.dto;
 
 import java.time.Instant;
-import java.util.UUID;
 
-public record FollowEventDto(
+public record UserCreateEventDto (
         String eventId,
         String action,
-        String followerEmail,
-        String followingEmail,
+        Long id,
+        String email,
         Instant timestamp
-) {}
+){}
