@@ -1,8 +1,6 @@
 package ifpb.springkafkaconsumer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ifpb.springkafkaconsumer.dto.FollowEventDto;
-import ifpb.springkafkaconsumer.dto.UserCreateEventDto;
 import ifpb.springkafkaconsumer.model.User;
 import ifpb.springkafkaconsumer.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +18,9 @@ public class FollowKafkaListener {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private FollowService followService;
+
     @KafkaListener(topics="${kafka.topic.follow}", groupId = "follow-listener-group",
             containerFactory = "kafkaListenerContainerFactory")
     public void listen(Map<String, Object> eventMap){
@@ -27,15 +28,17 @@ public class FollowKafkaListener {
         String action = eventMap.get("action").toString();
         switch (action) {
             case "CREATE_USER" ->{
-                UserCreateEventDto dto = objectMapper.convertValue(eventMap, UserCreateEventDto.class);
+                Long id = Long.valueOf(eventMap.get("id").toString());
+                String email = (String) eventMap.get("email");
                 User user = new User();
-                user.setId(dto.id());
-                user.setEmail(dto.email());
+                user.setId(id);
+                user.setEmail(email);
                 userRepository.save(user);
             }
             case "FOLLOW" -> {
-                FollowEventDto dto = objectMapper.convertValue(eventMap, FollowEventDto.class);
-
+                String followerEmail = eventMap.get("followerEmail").toString();
+                String followingEmail = eventMap.get("followingEmail").toString();
+                followService.createFollowRelationship(followerEmail, followingEmail);
             }
         }
     }
